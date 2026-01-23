@@ -1,2 +1,3 @@
-import { request,response } from "express";
+
+import Noticias from "../../models/Noticias.js";
 
