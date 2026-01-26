@@ -54,9 +54,11 @@ export const crearNoticia = async (req, res) => {
         public_id: result.public_id,
       },
     });
-
+    
+    //guardar la noticia en la base de datos
     await noticia.save();
-
+    
+    //borrar la imagen de la carpeta uploads
     fs.unlinkSync(req.file.path);
 
     res.status(201).json({ message: "Noticia creada correctamente" });
@@ -70,3 +72,45 @@ export const crearNoticia = async (req, res) => {
     res.status(500).json({ message: "Error al crear la noticia" });
   }
 };
+
+
+export const getNoticias = async (req, res) => {
+  try {
+    const { author, category, published } = req.query;
+
+    const filters = {};
+
+    if (author) filters.author = author;
+    if (category) filters.category = category;
+    
+    if (typeof published === "string") {
+      filters.published = published === "true";
+    }
+    
+    //si existe un filtro , tramos la noticia mas reciente
+    const news = await Noticias.find(filters).sort({ createdAt: -1 });
+
+    res.status(200).json(news);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al obtener las noticias" });
+  }
+};
+
+
+
+export const getNoticiaById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        //buscamos noticia por Id
+        const noticia = await Noticias.findById(id);
+        if (!noticia) {
+            return res.status(404).json({ message: "Noticia no encontrada" });
+        }
+
+        res.status(200).json(noticia);
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener la noticia" });
+    }
+}
+
