@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+console.log("CLOUDINARY KEY:", process.env.CLOUDINARY_API_KEY);
 
 import app from "./app.js";
 import { connectDB } from "./db.js";
