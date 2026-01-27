@@ -160,3 +160,32 @@ export const updateNoticia = async (req, res) => {
     res.status(500).json({ message: "Error al actualizar la noticia" });
   }
 };
+
+
+
+export const borrarNoticias = async (req, res) => {
+
+   const {id} = req.params;
+
+  try {
+    //buscamos la noticia por id
+    const noticia = await Noticias.findById(id);
+     
+     if(!noticia){
+      return res.status(404).json({message: 'Noticia no encontrada'});
+     }
+
+     //borramos la imagen de cloudinary
+     if(noticia.image?.public_id){
+      await cloudinary.uploader.destroy(noticia.image.public_id);
+     }
+     
+     //borramos la noticia de la base de datos
+     await Noticias.findByIdAndDelete(id);
+
+     res.status(200).json({message: 'Noticia borrada correctamente'});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({message: 'Error al borrar la noticia'});
+  }
+}
