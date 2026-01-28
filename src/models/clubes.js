@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
-const ClubesSchema = new mongoose.Schema({
-   name: {
+const ClubesSchema = new mongoose.Schema(
+  {
+    name: {
       type: String,
       required: true,
       unique: true,
@@ -12,11 +13,17 @@ const ClubesSchema = new mongoose.Schema({
       type: String, // CAEE, RIVER, BOCA, etc
       uppercase: true,
       maxlength: 10,
+      trim: true,
     },
 
     city: {
       type: String,
-      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      trim: true,
     },
 
     colors: {
@@ -28,15 +35,18 @@ const ClubesSchema = new mongoose.Schema({
       url: { type: String, required: true },
       public_id: { type: String, required: true },
     },
+
     category: {
       type: String,
       enum: ["Masculino", "Femenino", "Mixto"],
       required: true,
     },
+
     active: {
       type: Boolean,
       default: true,
     },
+    
     slug: {
       type: String,
       unique: true,
@@ -44,7 +54,7 @@ const ClubesSchema = new mongoose.Schema({
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export default mongoose.model("Clubes", ClubesSchema)
+export default mongoose.model("Clubes", ClubesSchema);
