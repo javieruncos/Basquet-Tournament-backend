@@ -20,7 +20,7 @@ export const crearPartido = async (req, res) => {
     }
 
     if (local === visitante) {
-        return res
+      return res
         .status(400)
         .json({ message: "El local y el visitante no pueden ser iguales" });
     }
@@ -46,30 +46,96 @@ export const crearPartido = async (req, res) => {
     await nuevoPartido.save();
 
     res.status(201).json(nuevoPartido);
-
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-
 export const obtenerPartidos = async (req, res) => {
-    try {
-        const { local, visitante, fecha, hora } = req.query;
-        const filterQuery = {};
+  try {
+    const { local, visitante, fecha, hora } = req.query;
+    const filterQuery = {};
 
-        if (local) filterQuery.local = local;
-        if (visitante) filterQuery.visitante = visitante;
-        if (fecha) filterQuery.fecha = fecha;
-        if (hora) filterQuery.hora = hora;
-    
-        const partidoList = await partidos.find(filterQuery)
-        .populate("local", "name logo colors")
-        .populate("visitante", "name logo colors")
-        .sort({ createdAt: -1 });
-        res.status(200).json(partidoList);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (local) filterQuery.local = local;
+    if (visitante) filterQuery.visitante = visitante;
+    if (fecha) filterQuery.fecha = fecha;
+    if (hora) filterQuery.hora = hora;
+
+    const partidoList = await partidos
+      .find(filterQuery)
+      .populate("local", "name logo colors")
+      .populate("visitante", "name logo colors")
+      .sort({ createdAt: -1 });
+    res.status(200).json(partidoList);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const obtenerPartidoPorId = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID no válido" });
+  }
+
+  try {
+    const partido = await partidos
+      .findById(id)
+      .populate("local", "name logo colors")
+      .populate("visitante", "name logo colors");
+
+    if (!partido) {
+      return res.status(404).json({ message: "Partido no encontrado" });
     }
-}
+
+    res.status(200).json(partido);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const actualizarPartido = async (req, res) => {
+  const { id } = req.params;
+  const { local, visitante, fecha, hora } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID no válido" });
+  }
+
+  if (!local || !visitante || !fecha || !hora) {
+    return res
+      .status(400)
+      .json({ message: "Todos los campos son obligatorios" });
+  }
+
+  if (
+    !mongoose.Types.ObjectId.isValid(local) ||
+    !mongoose.Types.ObjectId.isValid(visitante)
+  ) {
+    return res.status(400).json({ message: "ID de club no válido" });
+  }
+
+  if (local === visitante) {
+    return res
+      .status(400)
+      .json({ message: "El local y el visitante no pueden ser iguales" });
+  }
+
+  const updateData = { ...req.body };
+
+  try {
+    const partidoActualizado = await partidos
+      .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+      .populate("local", "name logo colors")
+      .populate("visitante", "name logo colors");
+
+    if (!partidoActualizado) {
+      return res.status(404).json({ message: "Partido no encontrado" });
+    }
+
+    res.status(200).json(partidoActualizado);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
