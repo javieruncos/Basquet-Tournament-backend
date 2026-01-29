@@ -38,7 +38,7 @@ const ClubesSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ["Masculino", "Femenino", "Mixto"],
+      enum: ["Masculino", "Femenino", "Juvenil"],
       required: true,
     },
 
@@ -46,7 +46,7 @@ const ClubesSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    
+
     slug: {
       type: String,
       unique: true,

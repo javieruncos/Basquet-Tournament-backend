@@ -1,7 +1,9 @@
 import clubes from "../../models/clubes.js";
 import cloudinary from "../../config/cloudinary.js";
+import fs from "fs";
 
 export const crearClubes = async (req, res) => {
+
   try {
     if (!req.file) {
       return res.status(400).json({ message: "La imagen es obligatoria" });
