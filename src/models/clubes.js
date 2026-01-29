@@ -9,7 +9,7 @@ const ClubesSchema = new mongoose.Schema(
       trim: true,
     },
 
-    shortName: {
+    shortname: {
       type: String, // CAEE, RIVER, BOCA, etc
       uppercase: true,
       maxlength: 10,
