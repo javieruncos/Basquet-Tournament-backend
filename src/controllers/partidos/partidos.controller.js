@@ -167,37 +167,78 @@ export const borrarPartido = async (req, res) => {
 };
 
 export const actualizarResultado = async (req, res) => {
+  //recuperamos el id de la request
   const { id } = req.params;
-  const {resultado,estado} = req.body;
+  //extraemos el resultado y estodo del body
+  const { resultado, estado } = req.body;
 
-  if (
-    !mongoose.Types.ObjectId.isValid(id)) {
+  //verificamos que el id del partido sea valido
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "ID de club no válido" });
   }
 
+  //validamos que los campos local y visitante sean numeros 
   if (
-    typeof resultado.local !== "number" ||
-    typeof resultado.visitante !== "number" ||
-    resultado.local < 0 ||
-    resultado.visitante < 0
+    typeof resultado.total.local !== "number" ||
+    typeof resultado.total.visitante !== "number" ||
+    resultado.total.local < 0 ||
+    resultado.total.visitante < 0
   ) {
     return res.status(400).json({ message: "El resultado invalido" });
   }
 
+  //validomos que el resultado cuartos sea un array
+  if (resultado.cuartos) {
+    if (
+      //validamos que sea un array
+      !Array.isArray(resultado.cuartos) ||
+      //validamos que sea de 4 elementos
+      resultado.cuartos.length !== 4 ||
+      //validamos que sea un objeto con las propiedades correctas
+      resultado.cuartos.some(
+        (c) =>
+          typeof c.local !== "number" ||
+          typeof c.visitante !== "number" ||
+          c.local < 0 ||
+          c.visitante < 0,
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Resultados por cuartos inválidos" });
+    }
+  }
+  //validamos que el array exista
+  if (resultado.cuartos) {
+    //sumamos el resultado de los 4 cuartos del partido
+    const sumaLocal = resultado.cuartos.reduce((acc, c) => acc + c.local, 0);
+    //sumamos el resultado de los 4 cuartos del partido
+    const sumaVisitante = resultado.cuartos.reduce(
+      (acc, c) => acc + c.visitante,
+      0,
+    );
+
+    //validamos que las sumas de los cuartos coincida con el resultado total
+    if (
+      sumaLocal !== resultado.total.local ||
+      sumaVisitante !== resultado.total.visitante
+    ) {
+      return res.status(400).json({
+        message: "La suma de cuartos no coincide con el resultado total",
+      });
+    }
+  }
+
   try {
-   const partido = await partidos.findById(id);
+    const partido = await partidos.findById(id);
 
-   if(!partido){
-    return res.status(404).json({message: 'Partido no encontrado'});
-   }
+    if (!partido) {
+      return res.status(404).json({ message: "Partido no encontrado" });
+    }
 
-   if(partido.estado !== 'Finalizado'){
-    return res.status(400).json({message: 'El resultado solo se puede actualizar cuando el partido esté finalizado'});
-   }
-
-    partido.resultado.local = resultado.local;
-    partido.resultado.visitante = resultado.visitante;
+    partido.resultado = resultado;
     partido.estado = "Finalizado";
+
 
     await partido.save();
 
@@ -206,9 +247,7 @@ export const actualizarResultado = async (req, res) => {
       .populate("local", "name logo colors")
       .populate("visitante", "name logo colors");
 
-
     res.status(200).json(partidoActualizado);
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
