@@ -4,6 +4,8 @@ import morgan from "morgan";
 import noticiasRoute from "./routes/noticia.routes.js";
 import clubesRoute from "./routes/clubes.routes.js";
 import partidosRoute from "./routes/partidos.routes.js";
+import tablaRoute from "./routes/tabla.routes.js";
+
 
 
 
@@ -19,6 +21,9 @@ app.use(express.json());
 app.use("/api",noticiasRoute)
 app.use("/api",clubesRoute)
 app.use("/api",partidosRoute)
+app.use("/api",tablaRoute)
+
+
 
 
 

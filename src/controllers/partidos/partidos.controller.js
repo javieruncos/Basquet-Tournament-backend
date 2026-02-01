@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import partidos from "../../models/partidos.js";
 import clubes from "../../models/clubes.js";
+import { recalcularTablaService } from "../../services/tabla.services.js";
 
 export const crearPartido = async (req, res) => {
   try {
@@ -236,16 +237,14 @@ export const actualizarResultado = async (req, res) => {
       return res.status(404).json({ message: "Partido no encontrado" });
     }
 
-    if (partido.estado === "Finalizado") {
-      return res.status(400).json({
-        message: "El partido ya está finalizado",
-      });
-    }
+   
 
     partido.resultado = resultado;
     partido.estado = "Finalizado";
 
     await partido.save();
+
+    await recalcularTablaService();
 
     const partidoActualizado = await partidos
       .findById(id)
