@@ -177,7 +177,7 @@ export const actualizarResultado = async (req, res) => {
     return res.status(400).json({ message: "ID de club no válido" });
   }
 
-  //validamos que los campos local y visitante sean numeros 
+  //validamos que los campos local y visitante sean numeros
   if (
     typeof resultado.total.local !== "number" ||
     typeof resultado.total.visitante !== "number" ||
@@ -236,9 +236,14 @@ export const actualizarResultado = async (req, res) => {
       return res.status(404).json({ message: "Partido no encontrado" });
     }
 
+    if (partido.estado === "Finalizado") {
+      return res.status(400).json({
+        message: "El partido ya está finalizado",
+      });
+    }
+
     partido.resultado = resultado;
     partido.estado = "Finalizado";
-
 
     await partido.save();
 
