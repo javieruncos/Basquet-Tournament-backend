@@ -5,6 +5,7 @@ import noticiasRoute from "./routes/noticia.routes.js";
 import clubesRoute from "./routes/clubes.routes.js";
 import partidosRoute from "./routes/partidos.routes.js";
 import tablaRoute from "./routes/tabla.routes.js";
+import userRoute from "./routes/user.routes.js";
 
 
 
@@ -22,6 +23,8 @@ app.use("/api",noticiasRoute)
 app.use("/api",clubesRoute)
 app.use("/api",partidosRoute)
 app.use("/api",tablaRoute)
+app.use("/api/auth",userRoute)
+
 
 
 
