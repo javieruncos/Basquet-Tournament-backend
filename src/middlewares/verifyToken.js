@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
-import User from "../../models/user.js";
+import User from "../models/user.js";
 
 
-export const verifyToken = async (req, res, next) => {
+export const verifyTokenAuth = async (req, res, next) => {
+    console.log(req.cookies);
     const token = req.cookies.token;
 
     if(!token){
@@ -26,7 +27,7 @@ export const verifyToken = async (req, res, next) => {
 }
 
 export const verifyAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
+  if (req.user?.role !== "admin") {
     return res.status(403).json({
       message: "Solo admin"
     });

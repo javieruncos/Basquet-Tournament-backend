@@ -10,8 +10,6 @@ export const loginController = async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "El usuario no existe" });
 
-    if (user.email !== email)
-      return res.status(400).json({ message: "El email no existe" });
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -21,6 +19,14 @@ export const loginController = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+    });
+
 
     res.status(200).json({
       message: "Inicio de sesión exitoso",
@@ -75,4 +81,14 @@ export const createAdmin = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+export const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+
+  res.status(200).json({ message: "Logout OK" });
 };
