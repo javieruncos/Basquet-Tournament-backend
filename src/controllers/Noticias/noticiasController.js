@@ -3,8 +3,6 @@ import Noticias from "../../models/Noticias.js";
 import fs from "fs";
 
 export const crearNoticia = async (req, res) => {
-  console.log("BODY:", req.body);
-  console.log("FILE:", req.file);
   try {
     //verificar que se haya subido una imagen
     if (!req.file) {
@@ -62,8 +60,6 @@ export const crearNoticia = async (req, res) => {
 
     res.status(201).json({ message: "Noticia creada correctamente" });
   } catch (error) {
-    console.log("Error al crear la noticia", error);
-
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
@@ -90,7 +86,6 @@ export const getNoticias = async (req, res) => {
 
     res.status(200).json(news);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error al obtener las noticias" });
   }
 };
@@ -150,8 +145,6 @@ export const updateNoticia = async (req, res) => {
 
     res.status(200).json(noticiaActualizada);
   } catch (error) {
-    console.log(error);
-
     // limpieza por si falla algo
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
@@ -185,7 +178,6 @@ export const borrarNoticias = async (req, res) => {
 
      res.status(200).json({message: 'Noticia borrada correctamente'});
   } catch (error) {
-    console.log(error);
     res.status(500).json({message: 'Error al borrar la noticia'});
   }
 }
