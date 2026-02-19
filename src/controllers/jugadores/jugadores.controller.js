@@ -83,3 +83,45 @@ export const crearJugador = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+export const obtenerJugadores = async (req, res) => {
+  try {
+    const { clubId } = req.query;
+
+    const filter = {};
+    if (clubId) filter.clubId = clubId;
+
+    const jugadores = await Jugador.find(filter)
+      .populate("clubId", "nombre")
+      .sort({ nombre: 1 });
+
+    res.status(200).json(jugadores);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const eliminarJugador = async (req, res) => {
+  const { id } = req.params;
+
+  // Validar que el ID sea un ObjectId válido
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID de jugador no válido" });
+  }
+
+  try {
+    const jugador = await Jugador.findById(id);
+
+    if (!jugador) {
+      return res.status(404).json({ message: "Jugador no encontrado" });
+    }
+
+    await jugador.deleteOne();
+
+    res.status(200).json({ message: "Jugador eliminado correctamente" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
