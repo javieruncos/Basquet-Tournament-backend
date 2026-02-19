@@ -31,6 +31,40 @@ const partidoSchema = new mongoose.Schema(
         visitante: { type: Number, default: 0 },
       },
     },
+    ganador: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Clubes",
+      default: null, 
+    },
+    mvp: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Jugador",
+      default: null,
+    },
+    estadisticasJugadores: [
+      {
+        jugadorId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Jugadores",
+          required: true,
+        },
+
+        clubId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Clubes",
+          required: true,
+        },
+
+        puntos: { type: Number, default: 0 },
+        rebotes: { type: Number, default: 0 },
+        asistencias: { type: Number, default: 0 },
+        robos: { type: Number, default: 0 },
+        tapones: { type: Number, default: 0 },
+        minutos: { type: Number, default: 0 },
+        faltas: { type: Number, default: 0 },
+        perdidas: { type: Number, default: 0 },
+      },
+    ],
   },
   {
     timestamps: true,

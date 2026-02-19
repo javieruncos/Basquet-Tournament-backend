@@ -168,20 +168,19 @@ export const borrarPartido = async (req, res) => {
 
 export const actualizarResultado = async (req, res) => {
   const { id } = req.params;
-  const { resultado } = req.body;
+  const { resultado, estadisticasJugadores, mvp } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "ID de partido no válido" });
   }
 
-  // validar existencia de cuartos
   if (!resultado || !resultado.cuartos) {
     return res.status(400).json({
       message: "Debe enviar resultado.cuartos",
     });
   }
 
-  // validar array cuartos
+  // ✅ Validar cuartos
   if (
     !Array.isArray(resultado.cuartos) ||
     resultado.cuartos.length !== 4 ||
@@ -198,16 +197,19 @@ export const actualizarResultado = async (req, res) => {
     });
   }
 
-  // calcular totales automáticamente
-  const totalLocal = resultado.cuartos.reduce(
-    (acc, c) => acc + c.local,
-    0
-  );
-
+  //  Calcular totales automáticamente
+  const totalLocal = resultado.cuartos.reduce((acc, c) => acc + c.local, 0);
   const totalVisitante = resultado.cuartos.reduce(
     (acc, c) => acc + c.visitante,
     0
   );
+
+  //  Evitar empate (si tu torneo no lo permite)
+  if (totalLocal === totalVisitante) {
+    return res.status(400).json({
+      message: "No se permiten empates",
+    });
+  }
 
   const resultadoFinal = {
     cuartos: resultado.cuartos,
@@ -224,17 +226,66 @@ export const actualizarResultado = async (req, res) => {
       return res.status(404).json({ message: "Partido no encontrado" });
     }
 
+    //  Evitar modificar partido ya finalizado
+    if (partido.estado === "Finalizado") {
+      return res.status(400).json({
+        message: "El partido ya está finalizado",
+      });
+    }
+
+    //  Determinar ganador
+    const ganador =
+      totalLocal > totalVisitante ? partido.local : partido.visitante;
+
     partido.resultado = resultadoFinal;
     partido.estado = "Finalizado";
+    partido.ganador = ganador;
+
+    //  MVP
+    if (mvp) {
+      if (!mongoose.Types.ObjectId.isValid(mvp)) {
+        return res.status(400).json({
+          message: "MVP inválido",
+        });
+      }
+      partido.mvp = mvp;
+    }
+
+    //  Validar estadísticas por jugador
+    if (Array.isArray(estadisticasJugadores)) {
+      const statsValidas = estadisticasJugadores.every(e =>
+        mongoose.Types.ObjectId.isValid(e.jugadorId) &&
+        mongoose.Types.ObjectId.isValid(e.clubId) &&
+        e.puntos >= 0 &&
+        e.rebotes >= 0 &&
+        e.asistencias >= 0 &&
+        e.robos >= 0 &&
+        e.tapones >= 0 &&
+        e.minutos >= 0 &&
+        e.faltas >= 0 &&
+        e.perdidas >= 0
+      );
+
+      if (!statsValidas) {
+        return res.status(400).json({
+          message: "Estadísticas de jugadores inválidas",
+        });
+      }
+
+      partido.estadisticasJugadores = estadisticasJugadores;
+    }
 
     await partido.save();
 
+    //  Recalcular tabla
     await recalcularTablaService();
 
     const partidoActualizado = await partidos
       .findById(id)
       .populate("local", "name logo colors")
-      .populate("visitante", "name logo colors");
+      .populate("visitante", "name logo colors")
+      .populate("ganador", "name")
+      .populate("mvp", "nombre numero");
 
     res.status(200).json(partidoActualizado);
 

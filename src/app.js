@@ -7,6 +7,7 @@ import partidosRoute from "./routes/partidos.routes.js";
 import tablaRoute from "./routes/tabla.routes.js";
 import userRoute from "./routes/user.routes.js";
 import cookieParser from "cookie-parser";
+import JugadoresRouter from "./routes/jugador.routes.js";
 
 
 
@@ -25,6 +26,7 @@ app.use(cookieParser())
 
 app.use("/api",noticiasRoute)
 app.use("/api",clubesRoute)
+app.use("/api",JugadoresRouter)
 app.use("/api",partidosRoute)
 app.use("/api",tablaRoute)
 app.use("/api/auth",userRoute)
