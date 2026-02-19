@@ -1,6 +1,8 @@
 import clubes from "../../models/clubes.js";
 import cloudinary from "../../config/cloudinary.js";
 import fs from "fs";
+import { Jugador } from "../../models/jugador.js";
+import mongoose from "mongoose";
 
 export const crearClubes = async (req, res) => {
 
@@ -90,7 +92,6 @@ export const obtenerClubesPorId = async (req, res) => {
   }
 };
 
-
 export const actualizarClubes = async (req, res) => {
   const {id} = req.params;
 
@@ -152,5 +153,28 @@ export const borrarClubes = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: "Error al borrar el club" });
+  }
+};
+
+
+export const obtenerJugadoresPorClub = async (req, res) => {
+  const { clubId } = req.params;
+
+  // Validar que sea un ObjectId válido
+  if (!mongoose.Types.ObjectId.isValid(clubId)) {
+    return res.status(400).json({ message: "ID de club no válido" });
+  }
+
+  try {
+    // Buscar jugadores que pertenezcan a ese club
+    const jugadores = await Jugador.find({ clubId }).select("nombre numero posicion estadisticas").sort({ numero: 1 });
+
+    if (!jugadores.length === 0) {
+      return res.status(404).json({ message: "No se encontraron jugadores para este club" });
+    }
+
+    res.status(200).json(jugadores);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
