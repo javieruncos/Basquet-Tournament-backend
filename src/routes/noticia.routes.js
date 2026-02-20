@@ -7,7 +7,8 @@ import { validate } from "../middlewares/validations.js";
 
 const router = Router();
 
-router.post("/noticias",verifyTokenAuth,verifyAdmin,upload.single("image"),validateNoticias,validate,crearNoticia)
+router.post("/noticias",upload.single("image"),validateNoticias,validate,crearNoticia)
+// router.post("/noticias",verifyTokenAuth,verifyAdmin,upload.single("image"),validateNoticias,validate,crearNoticia)
 router.get("/noticias",getNoticias)
 router.get("/noticias/:id",getNoticiaById)
 router.put("/noticias/:id",verifyTokenAuth,verifyAdmin,upload.single("image"),validateNoticiasUpdate,validate,updateNoticia)

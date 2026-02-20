@@ -3,6 +3,8 @@ import Noticias from "../../models/Noticias.js";
 import fs from "fs";
 
 export const crearNoticia = async (req, res) => {
+  console.log(req.file);
+console.log(req.body);
   try {
     //verificar que se haya subido una imagen
     if (!req.file) {
