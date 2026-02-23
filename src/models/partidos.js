@@ -14,9 +14,19 @@ const partidoSchema = new mongoose.Schema(
     },
     fecha: { type: Date, required: true },
     hora: { type: String, required: true },
+    estadio: { type: String, default:null },
+    jornada: { type: Number, default: null },
+    fase: {
+      type: String,
+      enum: ["Regular", "Octavos", "Cuartos", "Semifinal", "Final"],
+      default: "Regular",
+    },
+    arbitro1: { type: String, default:null },
+    arbitro2: { type: String, default: null },
+    arbitro3: { type: String, default: null },
     estado: {
       type: String,
-      enum: ["Programado", "En juego", "Finalizado"],
+      enum: ["Programado", "En juego", "Finalizado","Cancelado","Suspendido"],
       default: "Programado",
     },
     resultado: {
@@ -34,11 +44,11 @@ const partidoSchema = new mongoose.Schema(
     ganador: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Clubes",
-      default: null, 
+      default: null,
     },
     mvp: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Jugador",
+      ref: "Jugadores",
       default: null,
     },
     estadisticasJugadores: [

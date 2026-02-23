@@ -3,12 +3,14 @@ import partidos from "../../models/partidos.js";
 import clubes from "../../models/clubes.js";
 import { recalcularTablaService } from "../../services/tabla.services.js";
 import { Jugador } from "../../models/jugador.js";
+import { console } from "inspector";
 
 export const crearPartido = async (req, res) => {
+  console.log(req.body);
   try {
-    const { local, visitante, fecha, hora } = req.body;
+    const { local, visitante, fecha, hora, fase, estadio, arbitro1, arbitro2, arbitro3} = req.body;
 
-    if (!local || !visitante || !fecha || !hora) {
+    if (!local || !visitante || !fecha || !hora || !fase || !estadio || !arbitro1 || !arbitro2 || !arbitro3 ) {
       return res
         .status(400)
         .json({ message: "Todos los campos son obligatorios" });
@@ -45,6 +47,11 @@ export const crearPartido = async (req, res) => {
       visitante,
       fecha,
       hora,
+      estadio,
+      arbitro1,
+      arbitro2,
+      arbitro3,
+      fase,
     });
 
     await nuevoPartido.save();
@@ -58,11 +65,12 @@ export const crearPartido = async (req, res) => {
 export const obtenerPartidos = async (req, res) => {
   try {
     const { local, visitante, fecha, hora } = req.query;
+
     const filterQuery = {};
 
     if (local) filterQuery.local = local;
     if (visitante) filterQuery.visitante = visitante;
-    if (fecha) filterQuery.fecha = fecha;
+    if (fecha) filterQuery.fecha = new Date(fecha);
     if (hora) filterQuery.hora = hora;
 
     const partidoList = await partidos
@@ -70,6 +78,7 @@ export const obtenerPartidos = async (req, res) => {
       .populate("local", "name logo colors")
       .populate("visitante", "name logo colors")
       .sort({ createdAt: -1 });
+
     res.status(200).json(partidoList);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -101,41 +110,66 @@ export const obtenerPartidoPorId = async (req, res) => {
 
 export const actualizarPartido = async (req, res) => {
   const { id } = req.params;
-  const { local, visitante, fecha, hora } = req.body;
+  const {
+    local,
+    visitante,
+    fecha,
+    hora,
+    estadio,
+    arbitro1,
+    arbitro2,
+    arbitro3,
+    fase,
+    jornada,
+  } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "ID no válido" });
   }
 
-  if (!local || !visitante || !fecha || !hora) {
-    return res
-      .status(400)
-      .json({ message: "Todos los campos son obligatorios" });
+  //  Validar solo si vienen
+
+  if (local !== undefined && !mongoose.Types.ObjectId.isValid(local)) {
+    return res.status(400).json({ message: "ID de local no válido" });
   }
 
-  if (
-    !mongoose.Types.ObjectId.isValid(local) ||
-    !mongoose.Types.ObjectId.isValid(visitante)
-  ) {
-    return res.status(400).json({ message: "ID de club no válido" });
+  if (visitante !== undefined && !mongoose.Types.ObjectId.isValid(visitante)) {
+    return res.status(400).json({ message: "ID de visitante no válido" });
   }
 
-  if (local === visitante) {
-    return res
-      .status(400)
-      .json({ message: "El local y el visitante no pueden ser iguales" });
+  if (local !== undefined && visitante !== undefined && local === visitante) {
+    return res.status(400).json({
+      message: "El local y el visitante no pueden ser iguales",
+    });
   }
 
-  const updateData = {
-    local,
-    visitante,
-    fecha,
-    hora,
-  };
+  //  Solo lo que venga
+  const updateData = {};
+
+  if (local !== undefined) updateData.local = local;
+  if (visitante !== undefined) updateData.visitante = visitante;
+  if (fecha !== undefined) updateData.fecha = fecha;
+  if (hora !== undefined) updateData.hora = hora;
+  if (estadio !== undefined) updateData.estadio = estadio;
+  if (arbitro1 !== undefined) updateData.arbitro1 = arbitro1;
+  if (arbitro2 !== undefined) updateData.arbitro2 = arbitro2;
+  if (arbitro3 !== undefined) updateData.arbitro3 = arbitro3;
+  if (fase !== undefined) updateData.fase = fase;
+  if (jornada !== undefined) updateData.jornada = jornada;
+
+  //  Evitar update vacío
+  if (Object.keys(updateData).length === 0) {
+    return res.status(400).json({
+      message: "No se enviaron campos para actualizar",
+    });
+  }
 
   try {
     const partidoActualizado = await partidos
-      .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+      .findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      })
       .populate("local", "name logo colors")
       .populate("visitante", "name logo colors");
 

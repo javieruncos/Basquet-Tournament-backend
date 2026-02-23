@@ -6,10 +6,12 @@ import { validate } from "../middlewares/validations.js";
 
 const router = Router();
 
-router.post("/partidos",verifyTokenAuth,verifyAdmin,validatePartido,validate,crearPartido)
+// router.post("/partidos",verifyTokenAuth,verifyAdmin,validatePartido,validate,crearPartido)
+router.post("/partidos",validatePartido,validate,crearPartido)
 router.get("/partidos",obtenerPartidos)
 router.get("/partidos/:id",obtenerPartidoPorId)
-router.put("/partidos/:id",verifyTokenAuth,verifyAdmin,validatePartidoUpdate,validate,actualizarPartido)
+// router.put("/partidos/:id",verifyTokenAuth,verifyAdmin,validatePartidoUpdate,validate,actualizarPartido)
+router.put("/partidos/:id",validatePartidoUpdate,validate,actualizarPartido)
 router.delete("/partidos/:id",verifyTokenAuth,verifyAdmin,borrarPartido)
 router.put("/partidos/:id/resultado",verifyTokenAuth,verifyAdmin,validateResultado,validate,actualizarResultado)
 

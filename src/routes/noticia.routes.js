@@ -11,8 +11,10 @@ router.post("/noticias",upload.single("image"),validateNoticias,validate,crearNo
 // router.post("/noticias",verifyTokenAuth,verifyAdmin,upload.single("image"),validateNoticias,validate,crearNoticia)
 router.get("/noticias",getNoticias)
 router.get("/noticias/:id",getNoticiaById)
-router.put("/noticias/:id",verifyTokenAuth,verifyAdmin,upload.single("image"),validateNoticiasUpdate,validate,updateNoticia)
-router.delete("/noticias/:id",verifyTokenAuth,verifyAdmin,borrarNoticias)
+router.put("/noticias/:id",upload.single("image"),validateNoticiasUpdate,validate,updateNoticia)
+// router.put("/noticias/:id",verifyTokenAuth,verifyAdmin,upload.single("image"),validateNoticiasUpdate,validate,updateNoticia)
+router.delete("/noticias/:id",borrarNoticias)
+// router.delete("/noticias/:id",verifyTokenAuth,verifyAdmin,borrarNoticias)
 
 
 
