@@ -202,6 +202,7 @@ export const borrarPartido = async (req, res) => {
 };
 
 export const actualizarResultado = async (req, res) => {
+  console.log("BODY RECIBIDO:", req.body);
   const { id } = req.params;
   const { resultado, estadisticasJugadores, mvp, reabrir } = req.body;
 

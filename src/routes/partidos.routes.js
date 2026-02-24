@@ -13,7 +13,8 @@ router.get("/partidos/:id",obtenerPartidoPorId)
 // router.put("/partidos/:id",verifyTokenAuth,verifyAdmin,validatePartidoUpdate,validate,actualizarPartido)
 router.put("/partidos/:id",validatePartidoUpdate,validate,actualizarPartido)
 router.delete("/partidos/:id",verifyTokenAuth,verifyAdmin,borrarPartido)
-router.put("/partidos/:id/resultado",verifyTokenAuth,verifyAdmin,validateResultado,validate,actualizarResultado)
+// router.put("/partidos/:id/resultado",verifyTokenAuth,verifyAdmin,validateResultado,validate,actualizarResultado)
+router.put("/partidos/:id/resultado",validateResultado,validate,actualizarResultado)
 
 
 
