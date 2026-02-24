@@ -48,7 +48,7 @@ const partidoSchema = new mongoose.Schema(
     },
     mvp: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Jugadores",
+      ref: "Jugador",
       default: null,
     },
     estadisticasJugadores: [

@@ -8,9 +8,29 @@ import { console } from "inspector";
 export const crearPartido = async (req, res) => {
   console.log(req.body);
   try {
-    const { local, visitante, fecha, hora, fase, estadio, arbitro1, arbitro2, arbitro3} = req.body;
+    const {
+      local,
+      visitante,
+      fecha,
+      hora,
+      fase,
+      estadio,
+      arbitro1,
+      arbitro2,
+      arbitro3,
+    } = req.body;
 
-    if (!local || !visitante || !fecha || !hora || !fase || !estadio || !arbitro1 || !arbitro2 || !arbitro3 ) {
+    if (
+      !local ||
+      !visitante ||
+      !fecha ||
+      !hora ||
+      !fase ||
+      !estadio ||
+      !arbitro1 ||
+      !arbitro2 ||
+      !arbitro3
+    ) {
       return res
         .status(400)
         .json({ message: "Todos los campos son obligatorios" });
@@ -344,6 +364,32 @@ export const actualizarResultado = async (req, res) => {
           await jugador.save();
         }
       }
+    }
+
+    if (
+      !mvp &&
+      Array.isArray(estadisticasJugadores) &&
+      estadisticasJugadores.length
+    ) {
+      const mejorJugador = estadisticasJugadores.reduce((prev, curr) => {
+        const scorePrev =
+          (prev.puntos || 0) + (prev.rebotes || 0) + (prev.asistencias || 0);
+        const scoreCurr =
+          (curr.puntos || 0) + (curr.rebotes || 0) + (curr.asistencias || 0);
+        return scoreCurr > scorePrev ? curr : prev;
+      });
+
+      partido.mvp = mejorJugador.jugadorId;
+    } else if (mvp) {
+      // si envían mvp desde el front
+      if (!mongoose.Types.ObjectId.isValid(mvp)) {
+        return res.status(400).json({ message: "MVP inválido" });
+      }
+      const jugadorMVP = await Jugador.findById(mvp);
+      if (!jugadorMVP) {
+        return res.status(404).json({ message: "Jugador MVP no encontrado" });
+      }
+      partido.mvp = jugadorMVP._id;
     }
 
     await partido.save();
