@@ -315,6 +315,20 @@ export const actualizarResultado = async (req, res) => {
 
     //  Validar estadísticas por jugador
     if (Array.isArray(estadisticasJugadores)) {
+      const titularesLocal = estadisticasJugadores.filter(
+        (j) => j.clubId.toString() === partido.local.toString() && j.titular === true,
+      );
+
+      const titularesVisitante = estadisticasJugadores.filter(
+        (j) => j.clubId.toString() === partido.visitante.toString() && j.titular === true,
+      );
+
+      if (titularesLocal.length !== 5 || titularesVisitante.length !== 5) {
+        return res.status(400).json({
+          message: "Cada equipo debe tener exactamente 5 titulares",
+        });
+      }
+
       const statsValidas = estadisticasJugadores.every(
         (e) =>
           mongoose.Types.ObjectId.isValid(e.jugadorId) &&
