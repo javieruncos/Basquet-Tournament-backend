@@ -15,7 +15,8 @@ router.get('/clubes/:id',obtenerClubesPorId)
 router.get('/clubes/:clubId/jugadores',obtenerJugadoresPorClub)
 // router.put('/clubes/:id',verifyTokenAuth,verifyAdmin,upload.single('logo'),validateClubUpdate,validate,actualizarClubes)
 router.put('/clubes/:id',upload.single('logo'),validateClubUpdate,validate,actualizarClubes)
-router.delete('/clubes/:id',verifyTokenAuth,verifyAdmin,borrarClubes)
+// router.delete('/clubes/:id',verifyTokenAuth,verifyAdmin,borrarClubes)
+router.delete('/clubes/:id',borrarClubes)
 
 
 export default router;

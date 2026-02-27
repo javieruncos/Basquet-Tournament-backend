@@ -12,7 +12,7 @@ const partidoSchema = new mongoose.Schema(
       required: true,
       ref: "Clubes",
     },
-    fecha: { type: Date, required: true },
+    fecha: { type: String, required: true },
     hora: { type: String, required: true },
     estadio: { type: String, default: null },
     jornada: { type: Number, default: null },
