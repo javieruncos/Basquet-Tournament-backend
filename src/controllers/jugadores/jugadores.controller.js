@@ -125,3 +125,43 @@ export const eliminarJugador = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const obtenerTop5Jugadores = async (req, res) => {
+  try {
+    const top5 = await Jugador.aggregate([
+      {
+        $addFields: {
+          eficiencia: {
+            $subtract: [
+              {
+                $add: [
+                  "$estadisticas.puntos",
+                  "$estadisticas.rebotes",
+                  "$estadisticas.asistencias",
+                  "$estadisticas.robos",
+                  "$estadisticas.tapones",
+                ],
+              },
+              "$estadisticas.perdidas",
+            ],
+          },
+        },
+      },
+      { $sort: { eficiencia: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          nombre: 1,
+          numero: 1,
+          clubId: 1,
+          estadisticas: 1,
+          eficiencia: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json(top5);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

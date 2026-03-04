@@ -314,44 +314,100 @@ export const actualizarResultado = async (req, res) => {
     }
 
     //  Validar estadísticas por jugador
-    if (Array.isArray(estadisticasJugadores)) {
-      const titularesLocal = estadisticasJugadores.filter(
-        (j) => j.clubId.toString() === partido.local.toString() && j.titular === true,
-      );
+    // if (Array.isArray(estadisticasJugadores)) {
+    //   const titularesLocal = estadisticasJugadores.filter(
+    //     (j) => j.clubId.toString() === partido.local.toString() && j.titular === true,
+    //   );
 
-      const titularesVisitante = estadisticasJugadores.filter(
-        (j) => j.clubId.toString() === partido.visitante.toString() && j.titular === true,
-      );
+    //   const titularesVisitante = estadisticasJugadores.filter(
+    //     (j) => j.clubId.toString() === partido.visitante.toString() && j.titular === true,
+    //   );
 
-      if (titularesLocal.length !== 5 || titularesVisitante.length !== 5) {
-        return res.status(400).json({
-          message: "Cada equipo debe tener exactamente 5 titulares",
-        });
+    //   if (titularesLocal.length !== 5 || titularesVisitante.length !== 5) {
+    //     return res.status(400).json({
+    //       message: "Cada equipo debe tener exactamente 5 titulares",
+    //     });
+    //   }
+
+    //   const statsValidas = estadisticasJugadores.every(
+    //     (e) =>
+    //       mongoose.Types.ObjectId.isValid(e.jugadorId) &&
+    //       mongoose.Types.ObjectId.isValid(e.clubId) &&
+    //       e.puntos >= 0 &&
+    //       e.rebotes >= 0 &&
+    //       e.asistencias >= 0 &&
+    //       e.robos >= 0 &&
+    //       e.tapones >= 0 &&
+    //       e.minutos >= 0 &&
+    //       e.faltas >= 0 &&
+    //       e.perdidas >= 0,
+    //   );
+
+    //   if (!statsValidas) {
+    //     return res.status(400).json({
+    //       message: "Estadísticas de jugadores inválidas",
+    //     });
+    //   }
+
+    //   partido.estadisticasJugadores = estadisticasJugadores;
+    //   for (const est of estadisticasJugadores) {
+    //     const jugador = await Jugador.findById(est.jugadorId);
+    //     if (!jugador) {
+    //       return res
+    //         .status(404)
+    //         .json({ message: `Jugador ${est.jugadorId} no encontrado` });
+    //     }
+
+    //     if (jugador.clubId.toString() !== est.clubId) {
+    //       return res.status(400).json({
+    //         message: `El jugador ${jugador.nombre} no pertenece al club ${est.clubId}`,
+    //       });
+    //     }
+
+    //     if (jugador) {
+    //       jugador.estadisticas.puntos += est.puntos || 0;
+    //       jugador.estadisticas.rebotes += est.rebotes || 0;
+    //       jugador.estadisticas.asistencias += est.asistencias || 0;
+    //       jugador.estadisticas.robos += est.robos || 0;
+    //       jugador.estadisticas.tapones += est.tapones || 0;
+    //       jugador.estadisticas.perdidas += est.perdidas || 0;
+    //       jugador.estadisticas.faltas += est.faltas || 0;
+    //       jugador.estadisticas.minutos += est.minutos || 0;
+    //       jugador.estadisticas.partidosJugados += 1;
+
+    //       await jugador.save();
+    //     }
+    //   }
+    // }
+
+    if (Array.isArray(estadisticasJugadores) && estadisticasJugadores.length) {
+      // ➖ Restar estadísticas anteriores
+      if (partido.estadisticasJugadores?.length) {
+        for (const estAnterior of partido.estadisticasJugadores) {
+          const jugador = await Jugador.findById(estAnterior.jugadorId);
+
+          if (jugador) {
+            jugador.estadisticas.puntos -= estAnterior.puntos || 0;
+            jugador.estadisticas.rebotes -= estAnterior.rebotes || 0;
+            jugador.estadisticas.asistencias -= estAnterior.asistencias || 0;
+            jugador.estadisticas.robos -= estAnterior.robos || 0;
+            jugador.estadisticas.tapones -= estAnterior.tapones || 0;
+            jugador.estadisticas.perdidas -= estAnterior.perdidas || 0;
+            jugador.estadisticas.faltas -= estAnterior.faltas || 0;
+            jugador.estadisticas.minutos -= estAnterior.minutos || 0;
+            jugador.estadisticas.partidosJugados -= 1;
+
+            await jugador.save();
+          }
+        }
       }
 
-      const statsValidas = estadisticasJugadores.every(
-        (e) =>
-          mongoose.Types.ObjectId.isValid(e.jugadorId) &&
-          mongoose.Types.ObjectId.isValid(e.clubId) &&
-          e.puntos >= 0 &&
-          e.rebotes >= 0 &&
-          e.asistencias >= 0 &&
-          e.robos >= 0 &&
-          e.tapones >= 0 &&
-          e.minutos >= 0 &&
-          e.faltas >= 0 &&
-          e.perdidas >= 0,
-      );
-
-      if (!statsValidas) {
-        return res.status(400).json({
-          message: "Estadísticas de jugadores inválidas",
-        });
-      }
-
+      // ➕ Guardar nuevas estadísticas
       partido.estadisticasJugadores = estadisticasJugadores;
+
       for (const est of estadisticasJugadores) {
         const jugador = await Jugador.findById(est.jugadorId);
+
         if (!jugador) {
           return res
             .status(404)
@@ -364,19 +420,17 @@ export const actualizarResultado = async (req, res) => {
           });
         }
 
-        if (jugador) {
-          jugador.estadisticas.puntos += est.puntos || 0;
-          jugador.estadisticas.rebotes += est.rebotes || 0;
-          jugador.estadisticas.asistencias += est.asistencias || 0;
-          jugador.estadisticas.robos += est.robos || 0;
-          jugador.estadisticas.tapones += est.tapones || 0;
-          jugador.estadisticas.perdidas += est.perdidas || 0;
-          jugador.estadisticas.faltas += est.faltas || 0;
-          jugador.estadisticas.minutos += est.minutos || 0;
-          jugador.estadisticas.partidosJugados += 1;
+        jugador.estadisticas.puntos += est.puntos || 0;
+        jugador.estadisticas.rebotes += est.rebotes || 0;
+        jugador.estadisticas.asistencias += est.asistencias || 0;
+        jugador.estadisticas.robos += est.robos || 0;
+        jugador.estadisticas.tapones += est.tapones || 0;
+        jugador.estadisticas.perdidas += est.perdidas || 0;
+        jugador.estadisticas.faltas += est.faltas || 0;
+        jugador.estadisticas.minutos += est.minutos || 0;
+        jugador.estadisticas.partidosJugados += 1;
 
-          await jugador.save();
-        }
+        await jugador.save();
       }
     }
 
