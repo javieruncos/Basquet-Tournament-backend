@@ -15,6 +15,7 @@ export const crearPartido = async (req, res) => {
       hora,
       fase,
       estadio,
+      jornada,
       arbitro1,
       arbitro2,
       arbitro3,
@@ -29,7 +30,8 @@ export const crearPartido = async (req, res) => {
       !estadio ||
       !arbitro1 ||
       !arbitro2 ||
-      !arbitro3
+      !arbitro3 ||
+      !jornada
     ) {
       return res
         .status(400)
@@ -72,6 +74,7 @@ export const crearPartido = async (req, res) => {
       arbitro2,
       arbitro3,
       fase,
+      jornada,
     });
 
     await nuevoPartido.save();
