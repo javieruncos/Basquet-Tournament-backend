@@ -17,7 +17,7 @@ import JugadoresRouter from "./routes/jugador.routes.js";
 const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://TU-FRONTEND.vercel.app"
+  "https://basquet-tournament.vercel.app"
 ];
 
 app.use(cors({
