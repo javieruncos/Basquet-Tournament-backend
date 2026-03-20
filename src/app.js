@@ -15,10 +15,16 @@ import JugadoresRouter from "./routes/jugador.routes.js";
 
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://TU-FRONTEND.vercel.app"
+];
+
 app.use(cors({
-    origin:"http://localhost:5173",
-    credentials:true
+  origin: allowedOrigins,
+  credentials: true
 }));
+
 app.use(morgan("dev"));
 app.use('/uploads', express.static('uploads'));
 app.use(express.json());
