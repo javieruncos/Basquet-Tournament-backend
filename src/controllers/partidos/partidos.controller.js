@@ -3,12 +3,36 @@ import partidos from "../../models/partidos.js";
 import clubes from "../../models/clubes.js";
 import { recalcularTablaService } from "../../services/tabla.services.js";
 import { Jugador } from "../../models/jugador.js";
+import { console } from "inspector";
 
 export const crearPartido = async (req, res) => {
+  console.log(req.body);
   try {
-    const { local, visitante, fecha, hora } = req.body;
+    const {
+      local,
+      visitante,
+      fecha,
+      hora,
+      fase,
+      estadio,
+      jornada,
+      arbitro1,
+      arbitro2,
+      arbitro3,
+    } = req.body;
 
-    if (!local || !visitante || !fecha || !hora) {
+    if (
+      !local ||
+      !visitante ||
+      !fecha ||
+      !hora ||
+      !fase ||
+      !estadio ||
+      !arbitro1 ||
+      !arbitro2 ||
+      !arbitro3 ||
+      !jornada
+    ) {
       return res
         .status(400)
         .json({ message: "Todos los campos son obligatorios" });
@@ -45,6 +69,12 @@ export const crearPartido = async (req, res) => {
       visitante,
       fecha,
       hora,
+      estadio,
+      arbitro1,
+      arbitro2,
+      arbitro3,
+      fase,
+      jornada,
     });
 
     await nuevoPartido.save();
@@ -58,11 +88,12 @@ export const crearPartido = async (req, res) => {
 export const obtenerPartidos = async (req, res) => {
   try {
     const { local, visitante, fecha, hora } = req.query;
+
     const filterQuery = {};
 
     if (local) filterQuery.local = local;
     if (visitante) filterQuery.visitante = visitante;
-    if (fecha) filterQuery.fecha = fecha;
+    if (fecha) filterQuery.fecha = new Date(fecha);
     if (hora) filterQuery.hora = hora;
 
     const partidoList = await partidos
@@ -70,6 +101,7 @@ export const obtenerPartidos = async (req, res) => {
       .populate("local", "name logo colors")
       .populate("visitante", "name logo colors")
       .sort({ createdAt: -1 });
+
     res.status(200).json(partidoList);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -87,7 +119,9 @@ export const obtenerPartidoPorId = async (req, res) => {
     const partido = await partidos
       .findById(id)
       .populate("local", "name logo colors")
-      .populate("visitante", "name logo colors");
+      .populate("visitante", "name logo colors")
+      .populate("estadisticasJugadores.jugadorId", "nombre dorsal posicion")
+       .populate("mvp", "nombre numero posicion");
 
     if (!partido) {
       return res.status(404).json({ message: "Partido no encontrado" });
@@ -101,41 +135,66 @@ export const obtenerPartidoPorId = async (req, res) => {
 
 export const actualizarPartido = async (req, res) => {
   const { id } = req.params;
-  const { local, visitante, fecha, hora } = req.body;
+  const {
+    local,
+    visitante,
+    fecha,
+    hora,
+    estadio,
+    arbitro1,
+    arbitro2,
+    arbitro3,
+    fase,
+    jornada,
+  } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "ID no válido" });
   }
 
-  if (!local || !visitante || !fecha || !hora) {
-    return res
-      .status(400)
-      .json({ message: "Todos los campos son obligatorios" });
+  //  Validar solo si vienen
+
+  if (local !== undefined && !mongoose.Types.ObjectId.isValid(local)) {
+    return res.status(400).json({ message: "ID de local no válido" });
   }
 
-  if (
-    !mongoose.Types.ObjectId.isValid(local) ||
-    !mongoose.Types.ObjectId.isValid(visitante)
-  ) {
-    return res.status(400).json({ message: "ID de club no válido" });
+  if (visitante !== undefined && !mongoose.Types.ObjectId.isValid(visitante)) {
+    return res.status(400).json({ message: "ID de visitante no válido" });
   }
 
-  if (local === visitante) {
-    return res
-      .status(400)
-      .json({ message: "El local y el visitante no pueden ser iguales" });
+  if (local !== undefined && visitante !== undefined && local === visitante) {
+    return res.status(400).json({
+      message: "El local y el visitante no pueden ser iguales",
+    });
   }
 
-  const updateData = {
-    local,
-    visitante,
-    fecha,
-    hora,
-  };
+  //  Solo lo que venga
+  const updateData = {};
+
+  if (local !== undefined) updateData.local = local;
+  if (visitante !== undefined) updateData.visitante = visitante;
+  if (fecha !== undefined) updateData.fecha = fecha;
+  if (hora !== undefined) updateData.hora = hora;
+  if (estadio !== undefined) updateData.estadio = estadio;
+  if (arbitro1 !== undefined) updateData.arbitro1 = arbitro1;
+  if (arbitro2 !== undefined) updateData.arbitro2 = arbitro2;
+  if (arbitro3 !== undefined) updateData.arbitro3 = arbitro3;
+  if (fase !== undefined) updateData.fase = fase;
+  if (jornada !== undefined) updateData.jornada = jornada;
+
+  //  Evitar update vacío
+  if (Object.keys(updateData).length === 0) {
+    return res.status(400).json({
+      message: "No se enviaron campos para actualizar",
+    });
+  }
 
   try {
     const partidoActualizado = await partidos
-      .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+      .findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      })
       .populate("local", "name logo colors")
       .populate("visitante", "name logo colors");
 
@@ -168,6 +227,7 @@ export const borrarPartido = async (req, res) => {
 };
 
 export const actualizarResultado = async (req, res) => {
+  console.log("BODY RECIBIDO:", req.body);
   const { id } = req.params;
   const { resultado, estadisticasJugadores, mvp, reabrir } = req.body;
 
@@ -259,30 +319,100 @@ export const actualizarResultado = async (req, res) => {
     }
 
     //  Validar estadísticas por jugador
-    if (Array.isArray(estadisticasJugadores)) {
-      const statsValidas = estadisticasJugadores.every(
-        (e) =>
-          mongoose.Types.ObjectId.isValid(e.jugadorId) &&
-          mongoose.Types.ObjectId.isValid(e.clubId) &&
-          e.puntos >= 0 &&
-          e.rebotes >= 0 &&
-          e.asistencias >= 0 &&
-          e.robos >= 0 &&
-          e.tapones >= 0 &&
-          e.minutos >= 0 &&
-          e.faltas >= 0 &&
-          e.perdidas >= 0,
-      );
+    // if (Array.isArray(estadisticasJugadores)) {
+    //   const titularesLocal = estadisticasJugadores.filter(
+    //     (j) => j.clubId.toString() === partido.local.toString() && j.titular === true,
+    //   );
 
-      if (!statsValidas) {
-        return res.status(400).json({
-          message: "Estadísticas de jugadores inválidas",
-        });
+    //   const titularesVisitante = estadisticasJugadores.filter(
+    //     (j) => j.clubId.toString() === partido.visitante.toString() && j.titular === true,
+    //   );
+
+    //   if (titularesLocal.length !== 5 || titularesVisitante.length !== 5) {
+    //     return res.status(400).json({
+    //       message: "Cada equipo debe tener exactamente 5 titulares",
+    //     });
+    //   }
+
+    //   const statsValidas = estadisticasJugadores.every(
+    //     (e) =>
+    //       mongoose.Types.ObjectId.isValid(e.jugadorId) &&
+    //       mongoose.Types.ObjectId.isValid(e.clubId) &&
+    //       e.puntos >= 0 &&
+    //       e.rebotes >= 0 &&
+    //       e.asistencias >= 0 &&
+    //       e.robos >= 0 &&
+    //       e.tapones >= 0 &&
+    //       e.minutos >= 0 &&
+    //       e.faltas >= 0 &&
+    //       e.perdidas >= 0,
+    //   );
+
+    //   if (!statsValidas) {
+    //     return res.status(400).json({
+    //       message: "Estadísticas de jugadores inválidas",
+    //     });
+    //   }
+
+    //   partido.estadisticasJugadores = estadisticasJugadores;
+    //   for (const est of estadisticasJugadores) {
+    //     const jugador = await Jugador.findById(est.jugadorId);
+    //     if (!jugador) {
+    //       return res
+    //         .status(404)
+    //         .json({ message: `Jugador ${est.jugadorId} no encontrado` });
+    //     }
+
+    //     if (jugador.clubId.toString() !== est.clubId) {
+    //       return res.status(400).json({
+    //         message: `El jugador ${jugador.nombre} no pertenece al club ${est.clubId}`,
+    //       });
+    //     }
+
+    //     if (jugador) {
+    //       jugador.estadisticas.puntos += est.puntos || 0;
+    //       jugador.estadisticas.rebotes += est.rebotes || 0;
+    //       jugador.estadisticas.asistencias += est.asistencias || 0;
+    //       jugador.estadisticas.robos += est.robos || 0;
+    //       jugador.estadisticas.tapones += est.tapones || 0;
+    //       jugador.estadisticas.perdidas += est.perdidas || 0;
+    //       jugador.estadisticas.faltas += est.faltas || 0;
+    //       jugador.estadisticas.minutos += est.minutos || 0;
+    //       jugador.estadisticas.partidosJugados += 1;
+
+    //       await jugador.save();
+    //     }
+    //   }
+    // }
+
+    if (Array.isArray(estadisticasJugadores) && estadisticasJugadores.length) {
+      // ➖ Restar estadísticas anteriores
+      if (partido.estadisticasJugadores?.length) {
+        for (const estAnterior of partido.estadisticasJugadores) {
+          const jugador = await Jugador.findById(estAnterior.jugadorId);
+
+          if (jugador) {
+            jugador.estadisticas.puntos -= estAnterior.puntos || 0;
+            jugador.estadisticas.rebotes -= estAnterior.rebotes || 0;
+            jugador.estadisticas.asistencias -= estAnterior.asistencias || 0;
+            jugador.estadisticas.robos -= estAnterior.robos || 0;
+            jugador.estadisticas.tapones -= estAnterior.tapones || 0;
+            jugador.estadisticas.perdidas -= estAnterior.perdidas || 0;
+            jugador.estadisticas.faltas -= estAnterior.faltas || 0;
+            jugador.estadisticas.minutos -= estAnterior.minutos || 0;
+            jugador.estadisticas.partidosJugados -= 1;
+
+            await jugador.save();
+          }
+        }
       }
 
+      // ➕ Guardar nuevas estadísticas
       partido.estadisticasJugadores = estadisticasJugadores;
+
       for (const est of estadisticasJugadores) {
         const jugador = await Jugador.findById(est.jugadorId);
+
         if (!jugador) {
           return res
             .status(404)
@@ -295,20 +425,44 @@ export const actualizarResultado = async (req, res) => {
           });
         }
 
-        if (jugador) {
-          jugador.estadisticas.puntos += est.puntos || 0;
-          jugador.estadisticas.rebotes += est.rebotes || 0;
-          jugador.estadisticas.asistencias += est.asistencias || 0;
-          jugador.estadisticas.robos += est.robos || 0;
-          jugador.estadisticas.tapones += est.tapones || 0;
-          jugador.estadisticas.perdidas += est.perdidas || 0;
-          jugador.estadisticas.faltas += est.faltas || 0;
-          jugador.estadisticas.minutos += est.minutos || 0;
-          jugador.estadisticas.partidosJugados += 1;
+        jugador.estadisticas.puntos += est.puntos || 0;
+        jugador.estadisticas.rebotes += est.rebotes || 0;
+        jugador.estadisticas.asistencias += est.asistencias || 0;
+        jugador.estadisticas.robos += est.robos || 0;
+        jugador.estadisticas.tapones += est.tapones || 0;
+        jugador.estadisticas.perdidas += est.perdidas || 0;
+        jugador.estadisticas.faltas += est.faltas || 0;
+        jugador.estadisticas.minutos += est.minutos || 0;
+        jugador.estadisticas.partidosJugados += 1;
 
-          await jugador.save();
-        }
+        await jugador.save();
       }
+    }
+
+    if (
+      !mvp &&
+      Array.isArray(estadisticasJugadores) &&
+      estadisticasJugadores.length
+    ) {
+      const mejorJugador = estadisticasJugadores.reduce((prev, curr) => {
+        const scorePrev =
+          (prev.puntos || 0) + (prev.rebotes || 0) + (prev.asistencias || 0);
+        const scoreCurr =
+          (curr.puntos || 0) + (curr.rebotes || 0) + (curr.asistencias || 0);
+        return scoreCurr > scorePrev ? curr : prev;
+      });
+
+      partido.mvp = mejorJugador.jugadorId;
+    } else if (mvp) {
+      // si envían mvp desde el front
+      if (!mongoose.Types.ObjectId.isValid(mvp)) {
+        return res.status(400).json({ message: "MVP inválido" });
+      }
+      const jugadorMVP = await Jugador.findById(mvp);
+      if (!jugadorMVP) {
+        return res.status(404).json({ message: "Jugador MVP no encontrado" });
+      }
+      partido.mvp = jugadorMVP._id;
     }
 
     await partido.save();

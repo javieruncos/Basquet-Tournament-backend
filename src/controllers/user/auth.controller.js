@@ -92,3 +92,10 @@ export const logout = (req, res) => {
 
   res.status(200).json({ message: "Logout OK" });
 };
+
+
+export const getMe = (req, res) => {
+  res.json({
+    user: req.user
+  });
+};

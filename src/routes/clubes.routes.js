@@ -16,4 +16,5 @@ router.put('/clubes/:id',verifyTokenAuth,verifyAdmin,upload.single('logo'),valid
 router.delete('/clubes/:id',verifyTokenAuth,verifyAdmin,borrarClubes)
 
 
+
 export default router;
