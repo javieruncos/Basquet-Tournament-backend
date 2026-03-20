@@ -119,7 +119,9 @@ export const obtenerPartidoPorId = async (req, res) => {
     const partido = await partidos
       .findById(id)
       .populate("local", "name logo colors")
-      .populate("visitante", "name logo colors");
+      .populate("visitante", "name logo colors")
+      .populate("estadisticasJugadores.jugadorId", "nombre dorsal posicion")
+       .populate("mvp", "nombre numero posicion");
 
     if (!partido) {
       return res.status(404).json({ message: "Partido no encontrado" });
